@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Harmony -->
-    <!-- Application Structure Plan: The application is now designed with a multi-tab interactive dashboard structure. The core "Food Explorer" tab allows users to quickly filter and search for individual food items, providing instant dietary guidance. New tabs for "Daily Meal Plans" and "Gut Health" (Probiotics & Prebiotics) offer structured information and actionable meal suggestions. The "Daily Meal Plans" tab features clickable meals that reveal a modal with ingredients and substitution ideas, making meal planning dynamic. This structured, tabbed approach enhances overall user understanding by logically segmenting information and providing different exploration paths for various user needs (quick lookup vs. planned meals vs. specific health areas). -->
-    <!-- Visualization & Content Choices: Report Info: Expanded food list with status, descriptions, portion suggestions, and new probiotic/prebiotic data. New meal definitions with ingredients and substitution ideas. -> Goal: Organize, Inform, Compare, Guide. -> Viz/Presentation Method: The "Food Explorer" retains interactive cards and a Chart.js donut chart for status summaries. The "Daily Meal Plans" tab uses structured HTML lists for daily meals, with each meal being a clickable element. A JavaScript-driven modal displays meal ingredients and suggested substitutions. The "Gut Health" tab presents dedicated sections for probiotics and prebiotics using descriptive HTML. -> Interaction: Tabbed navigation controls the main view. Filters and search remain active in "Food Explorer." Clicking meals in "Daily Meal Plans" triggers a dynamic modal. -> Justification: The tabbed layout improves navigation for diverse content. Interactive meals with substitution modals provide practical guidance, fostering active planning. Chart.js continues to offer at-a-glance data insights for the food explorer. -> Library/Method: HTML/Tailwind for structure and styling, Vanilla JS for all interaction logic (filtering, modal control, tab switching), and Chart.js for the canvas-based chart. -->
+    <!-- Application Structure Plan: The application is now designed with a multi-tab interactive dashboard structure. The core "Food Explorer" tab allows users to quickly filter and search for individual food items, providing instant dietary guidance. New tabs for "Daily Meals" (now meal examples) and "Gut Health" (Probiotics & Prebiotics) offer structured information and actionable meal suggestions. The "Daily Meals" tab features clickable meals that reveal a modal with ingredients and substitution ideas, making meal planning dynamic. This structured, tabbed approach enhances overall user understanding by logically segmenting information and providing different exploration paths for various user needs (quick lookup vs. planned meals vs. specific health areas). -->
+    <!-- Visualization & Content Choices: Report Info: Expanded food list with status, descriptions, portion suggestions, and new probiotic/prebiotic data. New meal definitions with ingredients and substitution ideas. -> Goal: Organize, Inform, Compare, Guide. -> Viz/Presentation Method: The "Food Explorer" retains interactive cards and a Chart.js donut chart for status summaries. The "Daily Meals" tab uses structured HTML lists for categorized meal examples (Breakfast, Lunch, Dinner). A JavaScript-driven modal displays meal ingredients and suggested substitutions. The "Gut Health" tab presents dedicated sections for probiotics and prebiotics using descriptive HTML. -> Interaction: Tabbed navigation controls the main view. Filters and search remain active in "Food Explorer." Clicking meals in "Daily Meals" triggers a dynamic modal. -> Justification: The tabbed layout improves navigation for diverse content. Interactive meals with substitution modals provide practical guidance, fostering active planning. Chart.js continues to offer at-a-glance data insights for the food explorer. -> Library/Method: HTML/Tailwind for structure and styling, Vanilla JS for all interaction logic (filtering, modal control, tab switching), and Chart.js for the canvas-based chart. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -90,7 +90,7 @@
         <nav class="mb-8 md:mb-10 border-b border-stone-200">
             <ul class="flex justify-center -mb-px">
                 <li><button data-tab="food-explorer" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500 active-tab">Food Explorer</button></li>
-                <li><button data-tab="daily-meals" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500">Daily Meal Plans</button></li>
+                <li><button data-tab="daily-meals" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500">Daily Meals</button></li>
                 <li><button data-tab="gut-health" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500">Gut Health</button></li>
             </ul>
         </nav>
@@ -133,7 +133,7 @@
             </div>
 
             <div id="daily-meals-tab" class="tab-content hidden">
-                <p class="mb-6 text-stone-700 text-center max-w-2xl mx-auto">This section provides example daily meal plans to guide your eating throughout the day. Click on any meal to view its ingredients and discover helpful substitutions.</p>
+                <p class="mb-6 text-stone-700 text-center max-w-2xl mx-auto">Explore a variety of breakfast, lunch, and dinner examples that fit your sugar-free, low-cholesterol goals. Click on any meal to see ingredients and discover useful substitutions.</p>
                 <div id="meal-plans-container" class="space-y-8">
                 </div>
             </div>
@@ -265,24 +265,84 @@
                     ]
                 },
                 {
+                    name: 'Unsweetened Chia Seed Pudding',
+                    type: 'Breakfast',
+                    description: 'A fiber-rich and satisfying breakfast, great for gut health when made with unsweetened ingredients.',
+                    ingredients: ['Chia Seeds', 'Unsweetened Nut Milks', 'Berries (mixed)', 'A Handful of Raw, Unsalted Nuts/Seeds'],
+                    substitutions: [
+                        { item: 'Berries', alternatives: ['Small amount of other low-sugar fruit like kiwi', 'Sugar-free pure vanilla extract for flavor'] },
+                        { item: 'Unsweetened Nut Milks', alternatives: ['Water (for thicker consistency, if using less milk)', 'Full-Fat Unsweetened Yogurt (mixed in for creaminess)'] }
+                    ]
+                },
+                {
+                    name: 'Tofu Scramble with Sautéed Veggies',
+                    type: 'Breakfast',
+                    description: 'A delicious plant-based scramble, packed with protein and non-starchy vegetables.',
+                    ingredients: ['Tofu', 'Spinach', 'Mushrooms', 'Bell Peppers', 'Onions', 'Garlic', 'Olive Oil', 'Spices & Herbs (turmeric for color)'],
+                    substitutions: [
+                        { item: 'Tofu', alternatives: ['Egg Whites', 'Lentils (cooked and mashed slightly for a hash-like texture)'] },
+                        { item: 'Spinach', alternatives: ['Kale', 'Zucchini', 'Broccoli florets (finely chopped)'] }
+                    ]
+                },
+                {
                     name: 'Grilled Salmon with Roasted Asparagus',
                     type: 'Lunch',
                     description: 'A classic healthy meal, packed with Omega-3s and fiber.',
-                    ingredients: ['Fish (Salmon)', 'Asparagus', 'Olive Oil', 'Spices & Herbs'],
+                    ingredients: ['Fish (Salmon)', 'Asparagus', 'Olive Oil', 'Spices & Herbs (dill, lemon pepper)'],
                     substitutions: [
-                        { item: 'Salmon', alternatives: ['Mackerel', 'Sardines', 'Grilled Chicken Breast'] },
-                        { item: 'Asparagus', alternatives: ['Broccoli', 'Brussels Sprouts', 'Green Beans'] }
+                        { item: 'Salmon', alternatives: ['Mackerel', 'Sardines', 'Grilled Chicken Breast', 'Cod', 'Tilapia'] },
+                        { item: 'Asparagus', alternatives: ['Broccoli', 'Brussels Sprouts', 'Green Beans', 'Cauliflower'] }
+                    ]
+                },
+                {
+                    name: 'Large Green Salad with Grilled Chicken',
+                    type: 'Lunch',
+                    description: 'A light yet filling lunch, customizable with your favorite non-starchy vegetables and lean protein.',
+                    ingredients: ['Chicken Breast (grilled)', 'Leafy Greens (mixed)', 'Cucumber', 'Bell Peppers', 'Avocado', 'Homemade Dressings (olive oil & vinegar based, e.g., balsamic without sugar, apple cider vinegar dressing)'],
+                    substitutions: [
+                        { item: 'Chicken Breast', alternatives: ['Grilled Salmon', 'Lean Beef strips', 'Hard-Boiled Eggs (sliced)', 'Lentils (cooked and cooled)'] },
+                        { item: 'Avocado', alternatives: ['Small handful of Walnuts', 'Pumpkin Seeds', '1-2 tbsp Olive Oil'] }
+                    ]
+                },
+                {
+                    name: 'Turkey Lettuce Wraps',
+                    type: 'Lunch',
+                    description: 'A fresh, low-carb alternative to sandwiches, perfect for a quick and satisfying lunch.',
+                    ingredients: ['Turkey Breast (ground, cooked)', 'Lettuce Wraps (butter lettuce, romaine)', 'Mushrooms', 'Water Chestnuts (optional)', 'Homemade Dressings (sugar-free peanut sauce or soy-ginger sauce)', 'Fresh Ginger', 'Garlic'],
+                    substitutions: [
+                        { item: 'Turkey Breast', alternatives: ['Lean Beef (ground)', 'Chicken Breast (ground)', 'Tofu (crumbled)'] },
+                        { item: 'Lettuce Wraps', alternatives: ['Large Kale leaves', 'Bell Pepper halves (as "cups")', 'Cabbage leaves'] }
                     ]
                 },
                 {
                     name: 'Lean Beef & Broccoli Stir-fry',
                     type: 'Dinner',
                     description: 'A quick and nutrient-dense dinner. Ensure stir-fry sauce is homemade or sugar-free.',
-                    ingredients: ['Lean Beef', 'Broccoli', 'Bell Peppers', 'Garlic', 'Ginger', 'Olive Oil', 'Homemade Dressings (soy sauce, ginger, garlic, no sugar)'],
+                    ingredients: ['Lean Beef', 'Broccoli', 'Bell Peppers', 'Onions', 'Garlic', 'Ginger', 'Olive Oil', 'Homemade Dressings (sugar-free soy sauce/tamari, ginger, garlic, no sugar added broth)'],
                     substitutions: [
-                        { item: 'Lean Beef', alternatives: ['Chicken Breast', 'Tofu', 'Tempeh'] },
-                        { item: 'Broccoli', alternatives: ['Cauliflower', 'Green Beans', 'Mushrooms'] },
-                        { item: 'Bell Peppers', alternatives: ['Zucchini', 'Bok Choy'] }
+                        { item: 'Lean Beef', alternatives: ['Chicken Breast (sliced)', 'Tofu (cubed)', 'Tempeh (cubed)'] },
+                        { item: 'Broccoli', alternatives: ['Cauliflower', 'Green Beans', 'Mushrooms', 'Asparagus'] },
+                        { item: 'Bell Peppers', alternatives: ['Zucchini', 'Bok Choy', 'Snow Peas (fresh)'] }
+                    ]
+                },
+                {
+                    name: 'Baked Cod with Roasted Brussels Sprouts',
+                    type: 'Dinner',
+                    description: 'A simple and healthy fish dish, rich in protein and fiber, seasoned simply for pure flavor.',
+                    ingredients: ['Fish (Cod)', 'Brussels Sprouts', 'Olive Oil', 'Garlic', 'Spices & Herbs (lemon, black pepper)'],
+                    substitutions: [
+                        { item: 'Cod', alternatives: ['Tilapia', 'Haddock', 'Halibut', 'Flounder', 'Salmon (for more Omega-3s)'] },
+                        { item: 'Brussels Sprouts', alternatives: ['Broccoli', 'Cauliflower', 'Asparagus', 'Green Beans'] }
+                    ]
+                },
+                {
+                    name: 'Shrimp Scampi with Zucchini Noodles',
+                    type: 'Dinner',
+                    description: 'A flavorful and low-carb pasta alternative, focusing on healthy fats and lean protein.',
+                    ingredients: ['Shrimp', 'Zucchini Noodles', 'Garlic', 'Olive Oil', 'Spices & Herbs (red pepper flakes, oregano)', 'Fresh Parsley'],
+                    substitutions: [
+                        { item: 'Shrimp', alternatives: ['Chicken Breast (sliced)', 'Tofu (cubed)', 'Scallops'] },
+                        { item: 'Zucchini Noodles', alternatives: ['Spaghetti Squash', 'Shredded Cabbage (sautéed)', 'Kelp Noodles (rinsed)'] }
                     ]
                 },
                 {
@@ -291,7 +351,7 @@
                     description: 'A refreshing and probiotic-rich snack. Perfect for curbing sweet cravings naturally.',
                     ingredients: ['Full-Fat Unsweetened Yogurt', 'Berries (mixed)', 'Chia Seeds', 'A Handful of Raw, Unsalted Nuts/Seeds'],
                     substitutions: [
-                        { item: 'Full-Fat Unsweetened Yogurt', alternatives: ['Unsweetened Nut Milks (as a smoothie base)', 'Kefir'] },
+                        { item: 'Full-Fat Unsweetened Yogurt', alternatives: ['Unsweetened Nut Milks (as a smoothie base with protein powder)', 'Kefir'] },
                         { item: 'Berries', alternatives: ['Slices of Peach (small portion if strict)', 'Other low-sugar fruits like small amount of kiwi'] }
                     ]
                 },
@@ -299,35 +359,13 @@
                     name: 'Cucumber & Celery Sticks with Guacamole',
                     type: 'Snack',
                     description: 'A crunchy, satisfying snack with healthy fats and fiber.',
-                    ingredients: ['Cucumber', 'Celery', 'Avocado', 'Spices & Herbs'],
+                    ingredients: ['Cucumber', 'Celery', 'Avocado', 'Spices & Herbs (cilantro, lime juice)'],
                     substitutions: [
-                        { item: 'Guacamole', alternatives: ['Nut Butter (sugar-free almond butter)', 'Hummus (homemade, no sugar)'] },
-                        { item: 'Cucumber', alternatives: ['Bell Peppers', 'Radishes'] }
+                        { item: 'Guacamole', alternatives: ['Nut Butter (sugar-free almond butter)', 'Hummus (homemade, no sugar, made with approved beans)'] },
+                        { item: 'Cucumber', alternatives: ['Bell Peppers', 'Radishes', 'Carrot sticks (small portion)'] }
                     ]
                 }
             ];
-
-            const dailyMealPlans = [
-                {
-                    day: 'Monday',
-                    meals: [
-                        { mealName: 'Savory Egg & Avocado Bowl', mealIndex: mealsData.findIndex(m => m.name === 'Savory Egg & Avocado Bowl') },
-                        { mealName: 'Grilled Salmon with Roasted Asparagus', mealIndex: mealsData.findIndex(m => m.name === 'Grilled Salmon with Roasted Asparagus') },
-                        { mealName: 'Lean Beef & Broccoli Stir-fry', mealIndex: mealsData.findIndex(m => m.name === 'Lean Beef & Broccoli Stir-fry') },
-                        { mealName: 'Berry & Unsweetened Yogurt Parfait', mealIndex: mealsData.findIndex(m => m.name === 'Berry & Unsweetened Yogurt Parfait') }
-                    ]
-                },
-                {
-                    day: 'Tuesday',
-                    meals: [
-                        { mealName: 'Berry & Unsweetened Yogurt Parfait', mealIndex: mealsData.findIndex(m => m.name === 'Berry & Unsweetened Yogurt Parfait') },
-                        { mealName: 'Lean Beef & Broccoli Stir-fry', mealIndex: mealsData.findIndex(m => m.name === 'Lean Beef & Broccoli Stir-fry') },
-                        { mealName: 'Grilled Salmon with Roasted Asparagus', mealIndex: mealsData.findIndex(m => m.name === 'Grilled Salmon with Roasted Asparagus') },
-                        { mealName: 'Cucumber & Celery Sticks with Guacamole', mealIndex: mealsData.findIndex(m => m.name === 'Cucumber & Celery Sticks with Guacamole') }
-                    ]
-                }
-            ];
-
 
             const grid = document.getElementById('food-grid');
             const searchInput = document.getElementById('search');
@@ -507,24 +545,29 @@
 
             function renderMealPlans() {
                 mealPlansContainer.innerHTML = '';
-                dailyMealPlans.forEach(dayPlan => {
-                    const daySection = document.createElement('div');
-                    daySection.className = 'bg-white rounded-lg shadow-md p-6 mb-8';
-                    daySection.innerHTML = `<h3 class="text-2xl font-bold text-stone-800 mb-4">${dayPlan.day}</h3>`;
+                const mealTypes = ['Breakfast', 'Lunch', 'Dinner'];
+
+                mealTypes.forEach(type => {
+                    const typeSection = document.createElement('div');
+                    typeSection.className = 'bg-white rounded-lg shadow-md p-6 mb-8';
+                    typeSection.innerHTML = `<h3 class="text-2xl font-bold text-stone-800 mb-4">${type} Meals</h3>`;
                     
                     const mealList = document.createElement('ul');
-                    dayPlan.meals.forEach(mealEntry => {
-                        const meal = mealsData[mealEntry.mealIndex];
-                        if (meal) {
+                    const mealsOfType = mealsData.filter(meal => meal.type === type).slice(0, 3); // Get up to 3 examples
+                    
+                    if (mealsOfType.length === 0) {
+                        mealList.innerHTML = `<p class="text-stone-500">No ${type.toLowerCase()} meals available.</p>`;
+                    } else {
+                        mealsOfType.forEach(meal => {
                             const mealItem = document.createElement('li');
                             mealItem.className = 'mb-2 p-3 bg-stone-50 rounded-md cursor-pointer hover:bg-stone-100 transition meal-item';
-                            mealItem.dataset.mealIndex = mealEntry.mealIndex;
-                            mealItem.innerHTML = `<strong class="text-stone-700">${meal.type}:</strong> ${meal.name}`;
+                            mealItem.dataset.mealIndex = mealsData.findIndex(m => m === meal); // Find original index for modal
+                            mealItem.innerHTML = `<strong class="text-stone-700">${meal.name}</strong>`;
                             mealList.appendChild(mealItem);
-                        }
-                    });
-                    daySection.appendChild(mealList);
-                    mealPlansContainer.appendChild(daySection);
+                        });
+                    }
+                    typeSection.appendChild(mealList);
+                    mealPlansContainer.appendChild(typeSection);
                 });
             }
 
