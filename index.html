@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Sugar-Free & Low-Cholesterol Diet Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Harmony -->
+    <!-- Application Structure Plan: The application is now designed with a multi-tab interactive dashboard structure. The core "Food Explorer" tab allows users to quickly filter and search for individual food items, providing instant dietary guidance. New tabs for "Daily Meal Plans" and "Gut Health" (Probiotics & Prebiotics) offer structured information and actionable meal suggestions. The "Daily Meal Plans" tab features clickable meals that reveal a modal with ingredients and substitution ideas, making meal planning dynamic. This structured, tabbed approach enhances overall user understanding by logically segmenting information and providing different exploration paths for various user needs (quick lookup vs. planned meals vs. specific health areas). -->
+    <!-- Visualization & Content Choices: Report Info: Expanded food list with status, descriptions, portion suggestions, and new probiotic/prebiotic data. New meal definitions with ingredients and substitution ideas. -> Goal: Organize, Inform, Compare, Guide. -> Viz/Presentation Method: The "Food Explorer" retains interactive cards and a Chart.js donut chart for status summaries. The "Daily Meal Plans" tab uses structured HTML lists for daily meals, with each meal being a clickable element. A JavaScript-driven modal displays meal ingredients and suggested substitutions. The "Gut Health" tab presents dedicated sections for probiotics and prebiotics using descriptive HTML. -> Interaction: Tabbed navigation controls the main view. Filters and search remain active in "Food Explorer." Clicking meals in "Daily Meal Plans" triggers a dynamic modal. -> Justification: The tabbed layout improves navigation for diverse content. Interactive meals with substitution modals provide practical guidance, fostering active planning. Chart.js continues to offer at-a-glance data insights for the food explorer. -> Library/Method: HTML/Tailwind for structure and styling, Vanilla JS for all interaction logic (filtering, modal control, tab switching), and Chart.js for the canvas-based chart. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .card-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .card-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .modal-overlay.open .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <div id="app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-stone-900">Your Interactive Diet Guide</h1>
+            <p class="mt-3 md:mt-4 max-w-3xl mx-auto text-base md:text-lg text-stone-600">A tool to help you eliminate sugar, processed foods, and lower cholesterol. Explore foods, plan meals, and discover gut health essentials.</p>
+        </header>
+
+        <nav class="mb-8 md:mb-10 border-b border-stone-200">
+            <ul class="flex justify-center -mb-px">
+                <li><button data-tab="food-explorer" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500 active-tab">Food Explorer</button></li>
+                <li><button data-tab="daily-meals" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500">Daily Meal Plans</button></li>
+                <li><button data-tab="gut-health" class="tab-button inline-block py-3 px-6 text-lg font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-emerald-500 focus:outline-none focus:border-emerald-500">Gut Health</button></li>
+            </ul>
+        </nav>
+
+        <main>
+            <div id="food-explorer-tab" class="tab-content active-tab-content">
+                <p class="mb-6 text-stone-700 text-center max-w-2xl mx-auto">This section allows you to quickly look up individual food items, filter by their dietary status, category, or search for specific terms to understand their place in your sugar-free, low-cholesterol diet.</p>
+                <div class="sticky top-0 bg-stone-50/80 backdrop-blur-sm z-10 py-4 mb-8 border-b border-stone-200">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="search" class="sr-only">Search Foods</label>
+                            <input type="text" id="search" placeholder="🔍 Search for a food (e.g., 'chicken', 'bread')..." class="w-full p-3 border border-stone-300 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                        </div>
+                        <div class="flex flex-wrap gap-2 justify-center" id="status-filters">
+                        </div>
+                        <div>
+                            <label for="category-filter" class="sr-only">Filter by Category</label>
+                            <select id="category-filter" class="w-full p-3 border border-stone-300 rounded-lg shadow-sm bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <h2 class="text-2xl font-bold text-stone-800 mb-4" id="results-heading">All Foods</h2>
+                        <div id="food-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <div class="sticky top-40">
+                            <h2 class="text-2xl font-bold text-stone-800 mb-4 text-center">Filtered Summary</h2>
+                            <p class="text-center text-stone-600 mb-4">This chart shows a breakdown of the currently visible food items by their status.</p>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="daily-meals-tab" class="tab-content hidden">
+                <p class="mb-6 text-stone-700 text-center max-w-2xl mx-auto">This section provides example daily meal plans to guide your eating throughout the day. Click on any meal to view its ingredients and discover helpful substitutions.</p>
+                <div id="meal-plans-container" class="space-y-8">
+                </div>
+            </div>
+
+            <div id="gut-health-tab" class="tab-content hidden">
+                <p class="mb-6 text-stone-700 text-center max-w-2xl mx-auto">Nourishing your gut is crucial for overall health, immunity, and even cholesterol management. This section highlights key **Probiotic** and **Prebiotic** foods that support a healthy gut microbiome.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-stone-800 mb-4">Probiotics</h2>
+                        <p class="text-stone-600 mb-4">Probiotics are live beneficial bacteria found in certain foods that help balance your gut flora. They can aid digestion, nutrient absorption, and may indirectly support healthy cholesterol levels.</p>
+                        <div id="probiotic-list" class="space-y-4"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-stone-800 mb-4">Prebiotics</h2>
+                        <p class="text-stone-600 mb-4">Prebiotics are types of fiber that feed the beneficial bacteria in your gut. They promote the growth of healthy microbes, contributing to a robust digestive system and overall wellness.</p>
+                        <div id="prebiotic-list" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Meal Details Modal -->
+    <div id="meal-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="close-modal" class="absolute top-3 right-3 text-stone-500 hover:text-stone-800 text-2xl font-bold">&times;</button>
+            <h3 id="modal-meal-name" class="text-2xl font-bold text-stone-900 mb-4"></h3>
+            <p id="modal-meal-description" class="text-stone-700 mb-4"></p>
+            
+            <h4 class="text-xl font-semibold text-stone-800 mb-3">Ingredients:</h4>
+            <ul id="modal-ingredients-list" class="list-disc list-inside text-stone-600 mb-6 space-y-1"></ul>
+
+            <h4 class="text-xl font-semibold text-stone-800 mb-3">Substitution Ideas:</h4>
+            <ul id="modal-substitutions-list" class="list-disc list-inside text-stone-600 space-y-1"></ul>
+            <p id="no-substitutions-message" class="text-stone-600 hidden">No specific substitution ideas listed for this meal, but remember to choose other approved foods from the "Food Explorer" tab!</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const foodData = [
+                { category: 'Proteins', name: 'Chicken Breast (skinless, unprocessed)', description: 'High in protein, low in saturated fat. Good for muscle maintenance and satiety without adding cholesterol. Choose fresh, whole cuts.', status: 'Approved', portion: '4-6 oz cooked' },
+                { category: 'Proteins', name: 'Turkey Breast (skinless, unprocessed)', description: 'Similar to chicken breast, a lean protein source. Choose fresh, whole cuts.', status: 'Approved', portion: '4-6 oz cooked' },
+                { category: 'Proteins', name: 'Lean Beef (sirloin, round, flank, unprocessed)', description: 'Choose lean cuts and trim visible fat. Moderate consumption is key. Opt for fresh, unprocessed cuts.', status: 'Approved (in moderation)', portion: '3-4 oz cooked' },
+                { category: 'Proteins', name: 'Fish (Salmon, Mackerel, Sardines, Cod, Tilapia, Haddock - unprocessed)', description: 'Rich in Omega-3 fatty acids (for fatty fish), which can help lower triglycerides and improve cholesterol profiles. Low in saturated fat. Choose fresh or frozen, plain fish, not breaded or pre-seasoned.', status: 'Approved', portion: '4-6 oz cooked' },
+                { category: 'Proteins', name: 'Whole Eggs', description: 'While yolks contain cholesterol, dietary cholesterol has less impact on blood cholesterol for most people than saturated/trans fats. Good source of protein and nutrients.', status: 'Approved (in moderation)', portion: '1-2 eggs' },
+                { category: 'Proteins', name: 'Egg Whites', description: 'Pure protein, no cholesterol or fat.', status: 'Approved', portion: 'As desired' },
+                { category: 'Proteins', name: 'Lentils, Chickpeas, Black Beans', description: 'High in fiber and plant protein, which helps with satiety and can lower LDL (bad) cholesterol. Note: contain carbohydrates, but these are complex carbs. Choose dried or canned (rinse well to remove sodium).', status: 'Approved (in moderation)', portion: '1/2 - 1 cup cooked' },
+                { category: 'Proteins', name: 'Tofu, Tempeh, Edamame (unprocessed)', description: 'Excellent plant-based protein sources. Tofu and tempeh are versatile and low in saturated fat. Opt for plain, firm versions.', status: 'Approved', portion: '1/2 cup' },
+                { category: 'Proteins', name: 'Processed Meats (Sausage, Bacon, Deli Meats, Hot Dogs, Cured Meats)', description: 'Often high in sodium, unhealthy fats, and sometimes added sugars. Can raise cholesterol and negatively impact heart health. Highly processed and should be avoided.', status: 'To Avoid' },
+                { category: 'Vegetables', name: 'Leafy Greens (Spinach, Kale, Lettuce)', description: 'Low in calories, high in fiber, vitamins, and antioxidants. Minimal impact on blood sugar. Always choose fresh.', status: 'Approved', portion: 'As desired' },
+                { category: 'Vegetables', name: 'Broccoli, Cauliflower, Brussels Sprouts', description: 'Nutrient-dense, high in fiber, and low in net carbs. Great for overall health and blood sugar control. Always choose fresh or plain frozen.', status: 'Approved', portion: '1 cup cooked' },
+                { category: 'Vegetables', name: 'Bell Peppers, Zucchini, Cucumber, Celery', description: 'Hydrating, low in carbs, and rich in vitamins. Always choose fresh.', status: 'Approved', portion: 'As desired' },
+                { category: 'Vegetables', name: 'Mushrooms, Asparagus, Green Beans', description: 'Versatile and nutritious, adding flavor and nutrients without significant carbs or sugars. Always choose fresh or plain frozen.', status: 'Approved', portion: '1 cup cooked' },
+                { category: 'Vegetables', name: 'Potatoes, Corn, Peas', description: 'High in starch, which rapidly converts to sugar in the body. These are often processed into other foods too (e.g., potato chips, corn syrup).', status: 'To Avoid' },
+                { category: 'Fruits', name: 'Berries (Strawberries, Blueberries, Raspberries, Blackberries)', description: 'Lower in sugar than many other fruits, high in antioxidants and fiber. Consume in moderation.', status: 'Approved (in moderation)', portion: '1/2 - 1 cup' },
+                { category: 'Fruits', name: 'Avocado', description: 'A fruit! Rich in healthy monounsaturated fats, which can help lower LDL cholesterol. Always choose fresh.', status: 'Approved', portion: '1/4 - 1/2 fruit' },
+                { category: 'Fruits', name: 'Citrus Fruits (Lemon, Lime)', description: 'Very low in sugar, good for flavoring.', status: 'Approved', portion: 'As desired' },
+                { category: 'Fruits', name: 'High-Sugar Fruits (Banana, Mango, Grapes, Pineapple)', description: 'High natural sugar content, which can spike blood sugar. Limit or avoid, especially if sugar-free is a strict goal.', status: 'To Avoid' },
+                { category: 'Fruits', name: 'Dried Fruit', description: 'Concentrated sugar content. Even if natural, it\'s very high in sugar per serving and loses much of its water content, making it easier to overconsume.', status: 'To Avoid' },
+                { category: 'Fruits', name: 'Fruit Juices (even 100% natural)', description: 'Removes fiber and concentrates sugar, leading to rapid blood sugar spikes without the benefit of whole fruit fiber.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Oats, Brown Rice, Quinoa, Whole Wheat Bread/Pasta', description: 'While often considered "healthy," these still break down into sugar. For a strict "no foods that turn to sugar" diet, these should be avoided as they are still carbohydrate-dense and will affect blood sugar.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'White Bread, Pasta, White Rice', description: 'Highly processed, rapidly convert to sugar in the body, leading to blood sugar spikes and contributing to insulin resistance over time.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Baked Goods (Cakes, Cookies, Pastries, Muffins, Donuts)', description: 'High in refined sugar, refined flour (which turns to sugar), and unhealthy fats. Major contributors to high cholesterol and poor health. These are classic processed foods.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Breakfast Cereals (most types)', description: 'Often loaded with added sugar and refined grains. Highly processed.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Crackers, Pretzels, Chips, Granola Bars', description: 'These are typically high in refined carbohydrates, unhealthy fats, and often hidden sugars or artificial ingredients. They are highly processed snack foods.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Fast Food & Deep-Fried Foods', description: 'These meals are almost universally processed, high in unhealthy fats (trans and saturated), refined carbohydrates, sodium, and often hidden sugars.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Packaged Meals & Instant Foods', description: 'Contain numerous artificial ingredients, high sodium, unhealthy fats, and refined carbs/sugars, designed for convenience over nutrition.', status: 'To Avoid' },
+                { category: 'Grains & Starchy Foods', name: 'Cauliflower Rice', description: 'A low-carb, low-sugar alternative to white or brown rice. Make it yourself from fresh cauliflower.', status: 'Alternative', portion: '1 cup cooked' },
+                { category: 'Grains & Starchy Foods', name: 'Zucchini Noodles (Zoodles), Spaghetti Squash', description: 'Great low-carb, low-sugar alternatives to pasta. Make them yourself from fresh vegetables.', status: 'Alternative', portion: '1 cup cooked' },
+                { category: 'Grains & Starchy Foods', name: 'Lettuce Wraps', description: 'Use large lettuce leaves as wraps instead of bread or tortillas.', status: 'Alternative', portion: 'As desired' },
+                { category: 'Grains & Starchy Foods', name: 'Almond Flour/Coconut Flour (for baking)', description: 'For occasional low-carb baking, use these flours which are lower in net carbs and don\'t spike blood sugar as much as grain flours. Still, use sparingly.', status: 'Alternative' },
+                { category: 'Fats & Oils', name: 'Olive Oil (Extra Virgin)', description: 'Monounsaturated fat, heart-healthy, can help lower LDL cholesterol. Use for dressing or low-heat cooking. Opt for pure, cold-pressed oils.', status: 'Approved', portion: '1-2 tbsp' },
+                { category: 'Fats & Oils', name: 'Avocado Oil', description: 'High smoke point, good for cooking, rich in monounsaturated fats. Opt for pure, cold-pressed oils.', status: 'Approved', portion: '1-2 tbsp' },
+                { category: 'Fats & Oils', name: 'Coconut Oil (in moderation)', description: 'Contains saturated fat, but unique medium-chain triglycerides. Some research suggests it can raise HDL (good) cholesterol. Use sparingly. Choose virgin, unrefined.', status: 'Approved (in moderation)', portion: '1-2 tsp' },
+                { category: 'Fats & Oils', name: 'Ghee/Butter (grass-fed, in moderation)', description: 'While saturated fat, grass-fed options contain beneficial nutrients. Use sparingly. Choose high-quality, minimally processed butter.', status: 'Approved (in moderation)', portion: '1-2 tsp' },
+                { category: 'Fats & Oils', name: 'Nuts (Almonds, Walnuts, Pecans, Macadamias - unsalted, raw/roasted)', description: 'Healthy fats, fiber, and protein. Can help lower cholesterol. Eat in moderation due to calorie density. Choose plain, unsalted, and raw or dry-roasted nuts.', status: 'Approved', portion: 'Small handful (1/4 cup)' },
+                { category: 'Fats & Oils', name: 'Seeds (Chia, Flax, Hemp, Pumpkin, Sunflower - unsalted)', description: 'Excellent source of fiber, Omega-3s (flax, chia), and healthy fats. Choose plain, unsalted seeds.', status: 'Approved', portion: '1-2 tbsp' },
+                { category: 'Fats & Oils', name: 'Trans Fats (Hydrogenated/Partially Hydrogenated Oils)', description: 'Found in many processed and fried foods, margarine, and commercial baked goods. Significantly raise LDL (bad) cholesterol and lower HDL (good) cholesterol. Avoid at all costs.', status: 'To Avoid' },
+                { category: 'Fats & Oils', name: 'Highly Refined Vegetable Oils (Soybean, Corn, Sunflower, Canola, Cottonseed, Rapeseed)', description: 'Often high in Omega-6, which can be inflammatory when consumed in excess. They are heavily processed and often chemically extracted. Prioritize healthier, less refined oils.', status: 'To Avoid' },
+                { category: 'Dairy & Dairy Alternatives', name: 'Full-Fat Unsweetened Yogurt (plain, full-fat)', description: 'Good source of probiotics. Choose unsweetened to avoid hidden sugars. Opt for plain, whole milk yogurt with live cultures. Greek yogurt provides more protein.', status: 'Approved', portion: '1/2 - 1 cup' },
+                { category: 'Dairy & Dairy Alternatives', name: 'Cheese (full-fat, natural, unprocessed)', description: 'Source of fat and protein. Choose natural, unprocessed varieties (e.g., block cheese you grate yourself) over processed cheese slices or spreads.', status: 'Approved (in moderation)', portion: '1-2 oz' },
+                { category: 'Dairy & Dairy Alternatives', name: 'Unsweetened Nut Milks (Almond, Coconut, Macadamia)', description: 'Low-carb, low-sugar alternatives to cow\'s milk. **Crucially, always check labels for added sugars, thickeners, and other additives.** Look for brands with minimal ingredients and no carrageenan.', status: 'Approved', portion: '1 cup' },
+                { category: 'Dairy & Dairy Alternatives', name: 'Sweetened Yogurts, Flavored Milks, Processed Cheese Products', description: 'High in added sugars, artificial flavors, and unhealthy ingredients. Processed cheese products often contain trans fats and excessive sodium.', status: 'To Avoid' },
+                { category: 'Sweeteners', name: 'Stevia, Erythritol, Monk Fruit', description: 'Natural, non-caloric sweeteners that do not raise blood sugar. Use in moderation.', status: 'Approved (in moderation)' },
+                { category: 'Sweeteners', name: 'Agave Nectar, Honey, Maple Syrup, Dates, Date Syrup', description: 'While "natural," these are still high in sugar (fructose/glucose) and will significantly raise blood sugar. They are concentrated forms of sugar.', status: 'To Avoid' },
+                { category: 'Sweeteners', name: 'Artificial Sweeteners (Aspartame, Sucralose, Saccharin)', description: 'Some studies suggest potential negative effects on gut microbiome or metabolic health. Best to limit or avoid and retrain your palate away from sweetness.', status: 'To Avoid' },
+                { category: 'Sweeteners', name: 'White Sugar, Brown Sugar, High-Fructose Corn Syrup, Dextrose, Maltodextrin, etc.', description: 'Pure sugar in various forms, leading to rapid blood sugar spikes and contributing to insulin resistance, inflammation, and high cholesterol. Found in countless processed foods.', status: 'To Avoid' },
+                { category: 'Beverages', name: 'Water', description: 'Essential for hydration. Add lemon, lime, or cucumber slices for flavor.', status: 'Approved' },
+                { category: 'Beverages', name: 'Unsweetened Coffee, Tea (hot/iced)', description: 'Hydrating and contain antioxidants. Avoid adding sugar, milk, or cream (use unsweetened nut milk or heavy cream sparingly). Check for added flavors or sugars in pre-made bottled versions.', status: 'Approved' },
+                { category: 'Beverages', name: 'Herbal Teas', description: 'Great for hydration and flavor without sugar.', status: 'Approved' },
+                { category: 'Beverages', name: 'Sodas (regular and diet), Sweetened Juices, Energy Drinks, Sweetened Iced Teas', description: 'Loaded with sugar, artificial ingredients, and chemicals. Major contributors to weight gain, insulin resistance, and poor health. Even "diet" versions can negatively impact health.', status: 'To Avoid' },
+                { category: 'Beverages', name: 'Alcohol', description: 'Can be high in sugar (especially mixed drinks, beer, sweet wines) and calories. Best to limit severely or avoid for optimal health.', status: 'To Avoid' },
+                { category: 'Condiments & Sauces', name: 'Spices & Herbs', description: 'Add flavor without sugar or unhealthy fats. Use fresh or dried.', status: 'Approved' },
+                { category: 'Condiments & Sauces', name: 'Vinegar (Apple Cider Vinegar, White, Red Wine)', description: 'Excellent for dressings and flavor. **Crucially, check balsamic vinegar for added sugar.**', status: 'Approved' },
+                { category: 'Condiments & Sauces', name: 'Homemade Dressings (oil, vinegar, herbs)', description: 'Allows you to control ingredients, avoiding hidden sugars, unhealthy oils, and artificial additives common in store-bought versions.', status: 'Approved' },
+                { category: 'Condiments & Sauces', name: 'Mayonnaise (sugar-free, avocado oil based)', description: 'Read labels carefully! Many brands contain sugar and unhealthy oils. Look for clean ingredient lists.', status: 'Approved (check labels)' },
+                { category: 'Condiments & Sauces', name: 'Store-bought Ketchup, BBQ Sauce, Teriyaki Sauce, Salad Dressings, etc.', description: 'These are some of the biggest culprits for hidden sugars, high-fructose corn syrup, and unhealthy oils. Always read labels, or better yet, make your own from scratch.', status: 'To Avoid' },
+                { category: 'Snacks', name: 'Fresh Vegetables with Guacamole or Nut Butter', description: 'Healthy, unprocessed, and satisfying. Guacamole provides healthy fats, and nut butter provides protein and healthy fats (ensure it\'s sugar-free).', status: 'Approved', portion: '1-2 cups veggies with 1/4 cup dip' },
+                { category: 'Snacks', name: 'A Handful of Raw, Unsalted Nuts/Seeds', description: 'Excellent source of healthy fats, fiber, and protein. Good for satiety and can help with cholesterol.', status: 'Approved', portion: 'Small handful (1/4 cup)' },
+                { category: 'Snacks', name: 'Hard-Boiled Eggs', description: 'Quick, easy, and pure protein snack.', status: 'Approved', portion: '1-2 eggs' },
+                { category: 'Snacks', name: 'Jerky (unprocessed, sugar-free)', description: 'Choose jerky brands with no added sugar, nitrates, or artificial ingredients. Look for grass-fed options.', status: 'Approved (check labels)', portion: '1-2 oz' },
+                { category: 'Snacks', name: 'Flavored Rice Cakes, Sweetened Granola, Most Protein Bars', description: 'Often contain hidden sugars, refined carbohydrates, and artificial ingredients, despite appearing "healthy."', status: 'To Avoid' },
+                { category: 'Snacks', name: 'Candies, Chocolates, Ice Cream', description: 'Packed with sugar and often unhealthy fats. These are highly processed and should be completely avoided.', status: 'To Avoid' },
+                { category: 'Probiotics', name: 'Kimchi', description: 'Fermented cabbage, rich in probiotics. Adds a spicy, tangy flavor.', status: 'Approved', portion: '1/4 - 1/2 cup' },
+                { category: 'Probiotics', name: 'Sauerkraut (unpasteurized)', description: 'Fermented cabbage, high in beneficial bacteria. Ensure it\'s raw and unpasteurized for live cultures.', status: 'Approved', portion: '1/4 - 1/2 cup' },
+                { category: 'Probiotics', name: 'Kefir (unsweetened, full-fat)', description: 'Fermented milk drink, contains a wider variety of beneficial bacteria and yeast than yogurt. Choose plain, unsweetened.', status: 'Approved', portion: '1 cup' },
+                { category: 'Probiotics', name: 'Tempeh', description: 'Fermented soybean product, good source of protein and probiotics. Versatile meat alternative.', status: 'Approved', portion: '3-4 oz' },
+                { category: 'Probiotics', name: 'Pickles (fermented, not vinegar-brined)', description: 'Look for naturally fermented pickles (usually in the refrigerated section) without added sugar or artificial colors.', status: 'Approved', portion: '1-2 spears' },
+                { category: 'Prebiotics', name: 'Garlic', description: 'A common seasoning that acts as a powerful prebiotic, feeding beneficial gut bacteria.', status: 'Approved', portion: 'As desired' },
+                { category: 'Prebiotics', name: 'Onions', description: 'Rich in prebiotics, helps stimulate the growth of beneficial gut flora. Use in cooking or raw.', status: 'Approved', portion: 'As desired' },
+                { category: 'Prebiotics', name: 'Asparagus', description: 'A fibrous vegetable containing inulin, a type of prebiotic fiber that supports gut health.', status: 'Approved', portion: '1 cup cooked' },
+                { category: 'Prebiotics', name: 'Leeks', description: 'Related to onions and garlic, leeks are another excellent source of prebiotic fibers.', status: 'Approved', portion: '1 cup cooked' },
+                { category: 'Prebiotics', name: 'Artichokes', description: 'Known for their high fiber content, including prebiotics like inulin, beneficial for digestion and gut health.', status: 'Approved', portion: '1 medium' },
+                { category: 'Prebiotics', name: 'Chicory Root (often in coffee alternatives)', description: 'A potent source of inulin, often used as a coffee substitute or a fiber additive in some products.', status: 'Approved' }
+            ];
+
+            const mealsData = [
+                {
+                    name: 'Savory Egg & Avocado Bowl',
+                    type: 'Breakfast',
+                    description: 'A protein and healthy-fat rich breakfast to keep you full and energized without sugar spikes.',
+                    ingredients: ['Whole Eggs', 'Avocado', 'Spinach', 'Olive Oil', 'Spices & Herbs'],
+                    substitutions: [
+                        { item: 'Whole Eggs', alternatives: ['Egg Whites', 'Tofu scramble'] },
+                        { item: 'Avocado', alternatives: ['Small handful of Walnuts', '1 tbsp Chia Seeds'] },
+                        { item: 'Spinach', alternatives: ['Kale', 'Arugula', 'Broccoli sprouts'] }
+                    ]
+                },
+                {
+                    name: 'Grilled Salmon with Roasted Asparagus',
+                    type: 'Lunch',
+                    description: 'A classic healthy meal, packed with Omega-3s and fiber.',
+                    ingredients: ['Fish (Salmon)', 'Asparagus', 'Olive Oil', 'Spices & Herbs'],
+                    substitutions: [
+                        { item: 'Salmon', alternatives: ['Mackerel', 'Sardines', 'Grilled Chicken Breast'] },
+                        { item: 'Asparagus', alternatives: ['Broccoli', 'Brussels Sprouts', 'Green Beans'] }
+                    ]
+                },
+                {
+                    name: 'Lean Beef & Broccoli Stir-fry',
+                    type: 'Dinner',
+                    description: 'A quick and nutrient-dense dinner. Ensure stir-fry sauce is homemade or sugar-free.',
+                    ingredients: ['Lean Beef', 'Broccoli', 'Bell Peppers', 'Garlic', 'Ginger', 'Olive Oil', 'Homemade Dressings (soy sauce, ginger, garlic, no sugar)'],
+                    substitutions: [
+                        { item: 'Lean Beef', alternatives: ['Chicken Breast', 'Tofu', 'Tempeh'] },
+                        { item: 'Broccoli', alternatives: ['Cauliflower', 'Green Beans', 'Mushrooms'] },
+                        { item: 'Bell Peppers', alternatives: ['Zucchini', 'Bok Choy'] }
+                    ]
+                },
+                {
+                    name: 'Berry & Unsweetened Yogurt Parfait',
+                    type: 'Snack',
+                    description: 'A refreshing and probiotic-rich snack. Perfect for curbing sweet cravings naturally.',
+                    ingredients: ['Full-Fat Unsweetened Yogurt', 'Berries (mixed)', 'Chia Seeds', 'A Handful of Raw, Unsalted Nuts/Seeds'],
+                    substitutions: [
+                        { item: 'Full-Fat Unsweetened Yogurt', alternatives: ['Unsweetened Nut Milks (as a smoothie base)', 'Kefir'] },
+                        { item: 'Berries', alternatives: ['Slices of Peach (small portion if strict)', 'Other low-sugar fruits like small amount of kiwi'] }
+                    ]
+                },
+                {
+                    name: 'Cucumber & Celery Sticks with Guacamole',
+                    type: 'Snack',
+                    description: 'A crunchy, satisfying snack with healthy fats and fiber.',
+                    ingredients: ['Cucumber', 'Celery', 'Avocado', 'Spices & Herbs'],
+                    substitutions: [
+                        { item: 'Guacamole', alternatives: ['Nut Butter (sugar-free almond butter)', 'Hummus (homemade, no sugar)'] },
+                        { item: 'Cucumber', alternatives: ['Bell Peppers', 'Radishes'] }
+                    ]
+                }
+            ];
+
+            const dailyMealPlans = [
+                {
+                    day: 'Monday',
+                    meals: [
+                        { mealName: 'Savory Egg & Avocado Bowl', mealIndex: mealsData.findIndex(m => m.name === 'Savory Egg & Avocado Bowl') },
+                        { mealName: 'Grilled Salmon with Roasted Asparagus', mealIndex: mealsData.findIndex(m => m.name === 'Grilled Salmon with Roasted Asparagus') },
+                        { mealName: 'Lean Beef & Broccoli Stir-fry', mealIndex: mealsData.findIndex(m => m.name === 'Lean Beef & Broccoli Stir-fry') },
+                        { mealName: 'Berry & Unsweetened Yogurt Parfait', mealIndex: mealsData.findIndex(m => m.name === 'Berry & Unsweetened Yogurt Parfait') }
+                    ]
+                },
+                {
+                    day: 'Tuesday',
+                    meals: [
+                        { mealName: 'Berry & Unsweetened Yogurt Parfait', mealIndex: mealsData.findIndex(m => m.name === 'Berry & Unsweetened Yogurt Parfait') },
+                        { mealName: 'Lean Beef & Broccoli Stir-fry', mealIndex: mealsData.findIndex(m => m.name === 'Lean Beef & Broccoli Stir-fry') },
+                        { mealName: 'Grilled Salmon with Roasted Asparagus', mealIndex: mealsData.findIndex(m => m.name === 'Grilled Salmon with Roasted Asparagus') },
+                        { mealName: 'Cucumber & Celery Sticks with Guacamole', mealIndex: mealsData.findIndex(m => m.name === 'Cucumber & Celery Sticks with Guacamole') }
+                    ]
+                }
+            ];
+
+
+            const grid = document.getElementById('food-grid');
+            const searchInput = document.getElementById('search');
+            const statusFiltersContainer = document.getElementById('status-filters');
+            const categoryFilter = document.getElementById('category-filter');
+            const resultsHeading = document.getElementById('results-heading');
+            const chartCtx = document.getElementById('statusChart').getContext('2d');
+            let statusChart;
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const mealPlansContainer = document.getElementById('meal-plans-container');
+            const probioticList = document.getElementById('probiotic-list');
+            const prebioticList = document.getElementById('prebiotic-list');
+
+            const mealModalOverlay = document.getElementById('meal-modal-overlay');
+            const closeModalBtn = document.getElementById('close-modal');
+            const modalMealName = document.getElementById('modal-meal-name');
+            const modalMealDescription = document.getElementById('modal-meal-description');
+            const modalIngredientsList = document.getElementById('modal-ingredients-list');
+            const modalSubstitutionsList = document.getElementById('modal-substitutions-list');
+            const noSubstitutionsMessage = document.getElementById('no-substitutions-message');
+
+            let filters = {
+                searchTerm: '',
+                status: 'All',
+                category: 'All Categories'
+            };
+
+            const statusStyles = {
+                'Approved': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200', icon: '✔' },
+                'Approved (in moderation)': { bg: 'bg-sky-100', text: 'text-sky-800', border: 'border-sky-200', icon: '✔' },
+                'Approved (check labels)': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', icon: '✔' },
+                'To Avoid': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', icon: '✖' },
+                'Alternative': { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200', icon: '➜' }
+            };
+
+            const chartColors = {
+                'Approved': 'rgba(16, 185, 129, 0.8)',
+                'Approved (in moderation)': 'rgba(59, 130, 246, 0.8)',
+                'Approved (check labels)': 'rgba(234, 179, 8, 0.8)',
+                'To Avoid': 'rgba(239, 68, 68, 0.8)',
+                'Alternative': 'rgba(99, 102, 241, 0.8)'
+            };
+
+            function init() {
+                populateFilters();
+                renderFoodExplorer();
+                renderMealPlans();
+                renderGutHealthSection();
+                addEventListeners();
+                setActiveTab('food-explorer');
+            }
+
+            function populateFilters() {
+                const statuses = ['All', ...new Set(foodData.map(item => item.status))];
+                statusFiltersContainer.innerHTML = statuses.map(status => `
+                    <button data-status="${status}" class="status-filter-btn px-4 py-2 text-sm font-medium rounded-full transition ${status === 'All' ? 'bg-stone-800 text-white' : 'bg-white text-stone-700 hover:bg-stone-100'}">
+                        ${status}
+                    </button>
+                `).join('');
+
+                const categories = ['All Categories', ...new Set(foodData.map(item => item.category))];
+                categoryFilter.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            }
+
+            function renderFoodExplorer() {
+                const filteredData = foodData.filter(item => {
+                    const searchMatch = item.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) || item.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+                    const statusMatch = filters.status === 'All' || item.status === filters.status;
+                    const categoryMatch = filters.category === 'All Categories' || item.category === filters.category;
+                    return searchMatch && statusMatch && categoryMatch;
+                });
+
+                renderFoodCards(filteredData);
+                renderChart(filteredData);
+                updateHeading(filteredData.length);
+            }
+
+            function renderFoodCards(data) {
+                grid.innerHTML = '';
+                if (data.length === 0) {
+                    grid.innerHTML = `<p class="md:col-span-2 text-center text-stone-500">No foods match your filters.</p>`;
+                    return;
+                }
+                data.forEach(item => {
+                    const style = statusStyles[item.status] || { bg: 'bg-stone-100', text: 'text-stone-800', border: 'border-stone-200', icon: '•' };
+                    const card = document.createElement('div');
+                    card.className = `card-enter border ${style.border} ${style.bg} rounded-lg p-4 flex flex-col shadow-sm`;
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold text-lg ${style.text}">${item.name}</h3>
+                                <span class="text-2xl" title="${item.status}">${style.icon}</span>
+                            </div>
+                            <p class="text-sm text-stone-600 mb-1"><strong>Category:</strong> ${item.category}</p>
+                            ${item.portion ? `<p class="text-sm text-stone-600 mb-1"><strong>Suggested Portion:</strong> ${item.portion}</p>` : ''}
+                            <p class="text-sm text-stone-600">${item.description}</p>
+                        </div>
+                        <div class="mt-3 pt-3 border-t ${style.border}">
+                            <span class="text-xs font-semibold ${style.text} uppercase">${item.status}</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                    requestAnimationFrame(() => {
+                        card.classList.add('card-enter-active');
+                    });
+                });
+            }
+
+            function renderChart(data) {
+                const statusCounts = data.reduce((acc, item) => {
+                    acc[item.status] = (acc[item.status] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(statusCounts);
+                const chartData = Object.values(statusCounts);
+                const backgroundColor = labels.map(label => chartColors[label]);
+
+                if (statusChart) {
+                    statusChart.destroy();
+                }
+
+                statusChart = new Chart(chartCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Food Status',
+                            data: chartData,
+                            backgroundColor: backgroundColor,
+                            borderColor: 'rgba(245, 245, 244, 0.5)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#44403c',
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function updateHeading(count) {
+                let text = `${filters.status} Foods`;
+                if (filters.category !== 'All Categories') {
+                    text += ` in ${filters.category}`;
+                }
+                text += ` (${count} results)`;
+                resultsHeading.textContent = text;
+            }
+
+            function renderMealPlans() {
+                mealPlansContainer.innerHTML = '';
+                dailyMealPlans.forEach(dayPlan => {
+                    const daySection = document.createElement('div');
+                    daySection.className = 'bg-white rounded-lg shadow-md p-6 mb-8';
+                    daySection.innerHTML = `<h3 class="text-2xl font-bold text-stone-800 mb-4">${dayPlan.day}</h3>`;
+                    
+                    const mealList = document.createElement('ul');
+                    dayPlan.meals.forEach(mealEntry => {
+                        const meal = mealsData[mealEntry.mealIndex];
+                        if (meal) {
+                            const mealItem = document.createElement('li');
+                            mealItem.className = 'mb-2 p-3 bg-stone-50 rounded-md cursor-pointer hover:bg-stone-100 transition meal-item';
+                            mealItem.dataset.mealIndex = mealEntry.mealIndex;
+                            mealItem.innerHTML = `<strong class="text-stone-700">${meal.type}:</strong> ${meal.name}`;
+                            mealList.appendChild(mealItem);
+                        }
+                    });
+                    daySection.appendChild(mealList);
+                    mealPlansContainer.appendChild(daySection);
+                });
+            }
+
+            function renderGutHealthSection() {
+                const probiotics = foodData.filter(food => food.category === 'Probiotics');
+                const prebiotics = foodData.filter(food => food.category === 'Prebiotics');
+
+                probioticList.innerHTML = probiotics.map(item => `
+                    <div class="bg-emerald-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-emerald-800">${item.name}</h4>
+                        <p class="text-sm text-emerald-700">${item.description}</p>
+                        ${item.portion ? `<p class="text-xs text-emerald-600 mt-1">Suggested Portion: ${item.portion}</p>` : ''}
+                    </div>
+                `).join('');
+
+                prebioticList.innerHTML = prebiotics.map(item => `
+                    <div class="bg-indigo-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-indigo-800">${item.name}</h4>
+                        <p class="text-sm text-indigo-700">${item.description}</p>
+                        ${item.portion ? `<p class="text-xs text-indigo-600 mt-1">Suggested Portion: ${item.portion}</p>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            function showMealModal(mealIndex) {
+                const meal = mealsData[mealIndex];
+                if (!meal) return;
+
+                modalMealName.textContent = meal.name;
+                modalMealDescription.textContent = meal.description;
+
+                modalIngredientsList.innerHTML = meal.ingredients.map(ing => `<li>${ing}</li>`).join('');
+
+                if (meal.substitutions && meal.substitutions.length > 0) {
+                    modalSubstitutionsList.innerHTML = meal.substitutions.map(sub => `
+                        <li><strong>${sub.item}:</strong> ${sub.alternatives.join(', ')}</li>
+                    `).join('');
+                    modalSubstitutionsList.classList.remove('hidden');
+                    noSubstitutionsMessage.classList.add('hidden');
+                } else {
+                    modalSubstitutionsList.innerHTML = '';
+                    modalSubstitutionsList.classList.add('hidden');
+                    noSubstitutionsMessage.classList.remove('hidden');
+                }
+
+                mealModalOverlay.classList.add('open');
+            }
+
+            function hideMealModal() {
+                mealModalOverlay.classList.remove('open');
+            }
+
+            function setActiveTab(tabId) {
+                tabButtons.forEach(button => {
+                    if (button.dataset.tab === tabId) {
+                        button.classList.add('active-tab', 'border-emerald-500', 'text-stone-900');
+                        button.classList.remove('text-stone-600', 'hover:border-emerald-500');
+                    } else {
+                        button.classList.remove('active-tab', 'border-emerald-500', 'text-stone-900');
+                        button.classList.add('text-stone-600', 'hover:border-emerald-500');
+                    }
+                });
+
+                tabContents.forEach(content => {
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            }
+
+            function addEventListeners() {
+                searchInput.addEventListener('input', (e) => {
+                    filters.searchTerm = e.target.value;
+                    renderFoodExplorer();
+                });
+
+                statusFiltersContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('status-filter-btn')) {
+                        filters.status = e.target.dataset.status;
+                        document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                            btn.classList.remove('bg-stone-800', 'text-white');
+                            btn.classList.add('bg-white', 'text-stone-700', 'hover:bg-stone-100');
+                        });
+                        e.target.classList.add('bg-stone-800', 'text-white');
+                        e.target.classList.remove('bg-white', 'text-stone-700', 'hover:bg-stone-100');
+                        renderFoodExplorer();
+                    }
+                });
+
+                categoryFilter.addEventListener('change', (e) => {
+                    filters.category = e.target.value;
+                    renderFoodExplorer();
+                });
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        setActiveTab(e.target.dataset.tab);
+                    });
+                });
+
+                mealPlansContainer.addEventListener('click', (e) => {
+                    const mealItem = e.target.closest('.meal-item');
+                    if (mealItem && mealItem.dataset.mealIndex) {
+                        showMealModal(parseInt(mealItem.dataset.mealIndex));
+                    }
+                });
+
+                closeModalBtn.addEventListener('click', hideMealModal);
+                mealModalOverlay.addEventListener('click', (e) => {
+                    if (e.target === mealModalOverlay) {
+                        hideMealModal();
+                    }
+                });
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
